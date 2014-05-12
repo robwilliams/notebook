@@ -4,6 +4,8 @@ require 'active_record'
 require 'sqlite3'
 require 'uri'
 
+ActionController::Base.append_view_path("views")
+
 ActiveRecord::Base.establish_connection(adapter: 'sqlite3', database: 'notebook.sqlite3')
 
 class Note < ActiveRecord::Base
@@ -12,23 +14,7 @@ end
 class NotesController < ActionController::Base
 
   def index
-    response_body = "<ul>"
-
-    Note.all.each do |note|
-      response_body << "<li>#{note.content}</li>"
-    end
-
-    response_body << "</ul>"
-
-    response_body << %q{
-      <form action="/create-note" method="post">
-
-        <input name="content" maxlength="140">
-        <input type="submit">
-      </form>
-    }
-
-    render html: response_body.html_safe
+    @notes = Note.all
   end
 
   def create

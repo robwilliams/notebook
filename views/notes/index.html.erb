@@ -1,0 +1,12 @@
+<ul>
+  <% @notes.each do |note| %>
+  <li>
+  <%= note.content %>
+  </li>
+<% end %>
+</ul>
+
+<form action="/create-note" method="post">
+  <input name="content" maxlength="140">
+  <input type="submit">
+</form>
