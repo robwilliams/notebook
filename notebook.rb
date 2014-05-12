@@ -1,3 +1,4 @@
+require 'action_dispatch'
 require 'active_record'
 require 'sqlite3'
 require 'uri'
@@ -7,13 +8,11 @@ ActiveRecord::Base.establish_connection(adapter: 'sqlite3', database: 'notebook.
 class Note < ActiveRecord::Base
 end
 
-Notebook = -> env do
-  request = Rack::Request.new(env)
-  request_method, request_path = env['REQUEST_METHOD'], env['REQUEST_PATH']
+router = ActionDispatch::Routing::RouteSet.new
 
-  Rack::Response.new do |response|
-
-    if request.get? && request.path == '/show-notes'
+router.draw do
+  get '/show-notes', to: -> env {
+    Rack::Response.new do |response|
       response['Content-Type'] = 'text/html'
       response.write "<ul>"
 
@@ -30,13 +29,27 @@ Notebook = -> env do
         <input type="submit">
       </form>
       }
-    elsif request.post? && request.path == "/create-note"
+    end
+  }
+
+  post '/create-note', to: -> env {
+    request = Rack::Request.new(env)
+
+    Rack::Response.new do |response|
       Note.create(content: request.params['content'])
 
       response.redirect('/show-notes', 303) # See other
-    else
-      response.write "request_method: #{request_method},"\
-        "request_path: #{request.path}"
     end
-  end
+  }
+
+  get '*path', to: -> env {
+    request = Rack::Request.new(env)
+
+    Rack::Response.new do |response|
+      response.write "request_method: #{request.method},"\
+                     "request_path: #{request.path}"
+    end
+  }
 end
+
+Notebook = router
