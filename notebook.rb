@@ -1,3 +1,4 @@
+require 'action_controller'
 require 'action_dispatch'
 require 'active_record'
 require 'sqlite3'
@@ -8,48 +9,40 @@ ActiveRecord::Base.establish_connection(adapter: 'sqlite3', database: 'notebook.
 class Note < ActiveRecord::Base
 end
 
-router = ActionDispatch::Routing::RouteSet.new
+class NotesController < ActionController::Base
 
-router.draw do
-  get '/show-notes', to: -> env {
-    Rack::Response.new do |response|
-      response['Content-Type'] = 'text/html'
-      response.write "<ul>"
+  def index
+    response_body = "<ul>"
 
-      Note.all.each do |note|
-        response.write "<li>#{note.content}</li>"
-      end
+    Note.all.each do |note|
+      response_body << "<li>#{note.content}</li>"
+    end
 
-      response.write "</ul>"
+    response_body << "</ul>"
 
-      response.write %q{
+    response_body << %q{
       <form action="/create-note" method="post">
 
         <input name="content" maxlength="140">
         <input type="submit">
       </form>
-      }
-    end
-  }
+    }
 
-  post '/create-note', to: -> env {
-    request = Rack::Request.new(env)
+    render html: response_body.html_safe
+  end
 
-    Rack::Response.new do |response|
-      Note.create(content: request.params['content'])
+  def create
+    Note.create(content: request.params['content'])
 
-      response.redirect('/show-notes', 303) # See other
-    end
-  }
+    redirect_to('/show-notes', status: 303) # See other
+  end
+end
 
-  get '*path', to: -> env {
-    request = Rack::Request.new(env)
+router = ActionDispatch::Routing::RouteSet.new
 
-    Rack::Response.new do |response|
-      response.write "request_method: #{request.method},"\
-                     "request_path: #{request.path}"
-    end
-  }
+router.draw do
+  get '/show-notes', to: "notes#index"
+  post '/create-note', to: "notes#create"
 end
 
 Notebook = router
