@@ -6,7 +6,7 @@
 <% end %>
 </ul>
 
-<form action="/create-note" method="post">
+<form action="<%= notes_path %>" method="post">
   <input name="content" maxlength="140">
   <input type="submit">
 </form>

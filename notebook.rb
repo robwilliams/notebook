@@ -18,17 +18,18 @@ class NotesController < ActionController::Base
   end
 
   def create
-    Note.create(content: request.params['content'])
+    Note.create(content: params[:content])
 
-    redirect_to('/show-notes', status: 303) # See other
+    redirect_to(notes_path, status: :see_other)
   end
 end
 
 router = ActionDispatch::Routing::RouteSet.new
 
 router.draw do
-  get '/show-notes', to: "notes#index"
-  post '/create-note', to: "notes#create"
+  resources :notes, only: [:index, :create]
 end
+
+NotesController.send :include, router.url_helpers
 
 Notebook = router
