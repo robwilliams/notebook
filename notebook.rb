@@ -1,7 +1,11 @@
+require 'active_record'
 require 'sqlite3'
 require 'uri'
 
-database = SQLite3::Database.new('notebook.sqlite3')
+ActiveRecord::Base.establish_connection(adapter: 'sqlite3', database: 'notebook.sqlite3')
+
+class Note < ActiveRecord::Base
+end
 
 Notebook = -> env do
   request = Rack::Request.new(env)
@@ -13,8 +17,8 @@ Notebook = -> env do
       response['Content-Type'] = 'text/html'
       response.write "<ul>"
 
-      database.execute('SELECT content FROM notes') do |(content)|
-        response.write "<li>#{CGI.escapeHTML(content)}</li>"
+      Note.all.each do |note|
+        response.write "<li>#{note.content}</li>"
       end
 
       response.write "</ul>"
@@ -27,8 +31,7 @@ Notebook = -> env do
       </form>
       }
     elsif request.post? && request.path == "/create-note"
-      content = request.params['content']
-      database.execute('INSERT INTO notes VALUES (?)', content)
+      Note.create(content: request.params['content'])
 
       response.redirect('/show-notes', 303) # See other
     else
