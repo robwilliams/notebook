@@ -1,3 +1,4 @@
+require 'cgi'
 require 'socket'
 require 'sqlite3'
 
@@ -30,7 +31,7 @@ loop do
     response_body << "<ul>"
 
     database.execute('SELECT content FROM notes') do |(content)|
-      response_body << "<li>#{content}</li>"
+      response_body << "<li>#{CGI.escapeHTML(content)}</li>"
     end
 
     response_body << "</ul>"
